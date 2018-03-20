@@ -6,7 +6,7 @@
 
 ``` bash
 # install dependencies
-npm install
+yarn install # or npm install or cnpm install
 
 # serve with hot reload at localhost:9080
 npm run dev
@@ -14,8 +14,23 @@ npm run dev
 # build electron application for production
 npm run build
 
-
 ```
+
+#### yarn install
+
+``` bash
+npm install -g yarn
+```
+
+#### cnpm install
+
+``` bash
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+```
+
+#### doc
+
+[CSDN ](http://blog.csdn.net/q809198545)
 
 ---
 
