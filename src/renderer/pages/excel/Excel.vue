@@ -2,7 +2,9 @@
   <div id="wrapper">
     <input type="file" multiple="false" id="sheetjs-input" accept="xls,xlsx" @change="onchange" />
     <br/>
-    <button type="button" id="export-table" style="visibility:hidden;" @click="onexport">导出EXCEL</button>
+    <button type="button" id="export-table" v-show="data.length>0" @click="onexportByHtml">根据Html导出Excel</button>
+    <br/>
+    <button type="button" id="export-table" v-show="data.length>0" @click="onexportByJson">根据Json导出Excel</button>
     <br/>
     <div id="out-table"></div>
   </div>
@@ -10,12 +12,18 @@
 </template>
 
 <script>
-  import XLSX from 'xlsx';
+  import XLSX from 'xlsx'
   export default {
+    data(){
+      return{
+          data:[]
+      }
+    },
     methods: {
       onchange: function (evt) {
         var file;
         var files = evt.target.files;
+        var self = this;
 
         if (!files || files.length == 0) return;
 
@@ -23,7 +31,7 @@
 
         var reader = new FileReader();
         reader.onload = function (e) {
-          // pre-process data
+          // 数据预处理
           var binary = "";
           var bytes = new Uint8Array(e.target.result);
           var length = bytes.byteLength;
@@ -31,41 +39,42 @@
             binary += String.fromCharCode(bytes[i]);
           }
 
-          /* read workbook */
+          /* 读取 workbook */
           var wb = XLSX.read(binary, {
             type: 'binary'
           });
 
-          /* grab first sheet */
+          /* 选择第一个sheet */
           var wsname = wb.SheetNames[0];
           var ws = wb.Sheets[wsname];
 
-          /* excel转换json数组 */
-          var json = XLSX.utils.sheet_to_json(ws, {header:1});
-          console.log(json);
+          /* excel转换json数组,加上{header:1}是普通数组，不写是对象数组 */
+          self.data = XLSX.utils.sheet_to_json(ws);
+          console.log(self.data);
 
-          /* json数组转换excel */
-          var worksheet = XLSX.utils.aoa_to_sheet(json);
-          var new_workbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(new_workbook, worksheet, "sheetjs3");
-          XLSX.writeFile(new_workbook, "D://sheetjs_json.xlsx");
-
-          /* generate HTML */
+          /* 生成html表格 */
           var HTML = XLSX.utils.sheet_to_html(ws);
          
-          /* update table */
           document.getElementById('out-table').innerHTML = HTML;
-          /* show export button */
+          /* 显示导出Excel按钮 */
           document.getElementById('export-table').style.visibility = "visible";
         };
 
         reader.readAsArrayBuffer(file);
       },
-      onexport: function (evt) {
-        /* 表格转excel */
+      onexportByHtml: function () {
+        /* html表格转excel */
         var wb = XLSX.utils.table_to_book(document.getElementById('out-table'));
-        /* generate file and force a download*/
-        XLSX.writeFile(wb, "D://sheetjs.xlsx");
+        /* 生成文件，导出D盘 */
+        XLSX.writeFile(wb, "D://sheetjs_html.xlsx");
+      },
+      onexportByJson: function () {
+          /* json数组转换excel */
+          var worksheet = XLSX.utils.aoa_to_sheet(this.data);
+          var new_workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(new_workbook, worksheet, "sheetjs");
+          /* 生成文件，导出D盘 */
+          XLSX.writeFile(new_workbook, "D://sheetjs_json.xlsx");
       }
     }
   };
